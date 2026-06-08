@@ -1,0 +1,857 @@
+﻿<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartRecipes — Painel Gastronómico Premium</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind Config para cores personalizadas em Light Mode Creme -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            orange: '#F97316',      // Laranja Culinário vibrante
+                            orangeDark: '#EA580C',  // Laranja escuro
+                            green: '#10B981',       // Verde Culinário (Salgados)
+                            blue: '#3B82F6',        // Azul Premium (Doces)
+                            red: '#EF4444',         // Vermelho para Pratos Complexos
+                            black: '#09090B',       // Preto para textos principais
+                            offWhite: '#FCFAF2',    // Fundo creme amarelado quente
+                            grayLight: '#F5F3EC',   // Creme/cinza claro para cartões e sidebar
+                            grayMedium: '#EAE6D8',  // Bordas em tom creme de suporte
+                            slateText: '#71717A'    // Cinza de apoio para textos secundários
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Lucide Icons para ícones modernos -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght=300;400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #FCFAF2;
+        }
+        /* Custom Scrollbar para Light Mode Creme */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #F5F3EC;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #D4D2C9;
+            border-radius: 3px;
+        }
+
+            ::-webkit-scrollbar-thumb:hover {
+                background: #F97316;
+            }
+    </style>
+</head>
+<body class="text-brand-black min-h-screen flex flex-col md:flex-row">
+
+    <!-- SIDEBAR (Menu Lateral - Fundo Creme Claro) -->
+    <aside class="w-full md:w-64 bg-brand-grayLight border-b md:border-b-0 md:border-r border-brand-grayMedium flex flex-col justify-between p-6">
+        <div>
+            <!-- Logo -->
+            <div class="flex items-center gap-3 mb-8">
+                <div class="bg-brand-orange p-2.5 rounded-xl shadow-lg shadow-brand-orange/20">
+                    <i data-lucide="chef-hat" class="w-6 h-6 text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight bg-gradient-to-r from-brand-black to-brand-orange bg-clip-text text-transparent">SmartRecipes</h1>
+                    <p class="text-[10px] text-brand-slateText uppercase tracking-widest font-semibold">Culinária Inteligente</p>
+                </div>
+            </div>
+
+            <!-- Navegação -->
+            <nav class="space-y-1.5">
+                <a href="#" onclick="switchTab('dashboard')" id="nav-dashboard" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold transition-all duration-200 bg-brand-orange text-white shadow-md shadow-brand-orange/10">
+                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+                    Painel Principal
+                </a>
+                <a href="#" onclick="switchTab('receitas')" id="nav-receitas" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-brand-slateText hover:text-brand-black hover:bg-brand-grayMedium transition-all duration-200">
+                    <i data-lucide="book-open" class="w-4 h-4"></i>
+                    Minhas Receitas
+                </a>
+                <a href="#" onclick="switchTab('config')" id="nav-config" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-brand-slateText hover:text-brand-black hover:bg-brand-grayMedium transition-all duration-200">
+                    <i data-lucide="settings" class="w-4 h-4"></i>
+                    Conexão API
+                </a>
+            </nav>
+        </div>
+
+        <!-- Rodapé do menu / Status da Conexão -->
+        <div class="mt-8 pt-6 border-t border-brand-grayMedium">
+            <div class="bg-white p-4 rounded-xl border border-brand-grayMedium shadow-sm">
+                <div class="flex items-center gap-2 mb-1">
+                    <span id="status-dot" class="w-2 h-2 rounded-full bg-brand-orange animate-pulse"></span>
+                    <span id="status-text" class="text-xs font-bold text-brand-orange">Modo Demo</span>
+                </div>
+                <p class="text-[10px] text-brand-slateText">Banco de dados local em memória simulado.</p>
+                <button onclick="toggleApiMode()" id="btn-toggle-api" class="mt-3 w-full py-1.5 bg-brand-grayLight hover:bg-brand-orange hover:text-white text-brand-black rounded-lg text-xs font-semibold transition-all duration-200 border border-brand-grayMedium">
+                    Conectar à API C#
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ÁREA DE CONTEÚDO PRINCIPAL (Fundo Branco Off-White Creme) -->
+    <main class="flex-1 flex flex-col min-w-0 bg-brand-offWhite">
+
+        <!-- HEADER SUPERIOR -->
+        <header class="h-20 border-b border-brand-grayMedium px-6 md:px-8 flex items-center justify-between gap-4 bg-white">
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-brand-orange/10 rounded-full">
+                    <i data-lucide="user" class="w-6 h-6 text-brand-orange"></i>
+                </div>
+                <div>
+                    <h2 class="text-sm font-bold text-brand-black" id="current-user-name">Chef Universitário</h2>
+                    <p class="text-xs text-brand-slateText" id="current-user-email">chef@ipt.pt</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <button onclick="openModalReceita()" class="bg-brand-orange hover:bg-brand-orangeDark text-white font-bold text-sm px-4 py-2.5 rounded-xl flex items-center gap-2 transition-all duration-200 shadow-md shadow-brand-orange/10">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    Nova Receita
+                </button>
+            </div>
+        </header>
+
+        <!-- CONTAINER DAS VIEWS -->
+        <div class="p-6 md:p-8 flex-1 overflow-y-auto">
+
+            <!-- ================= VIEW 1: DASHBOARD ================= -->
+            <section id="view-dashboard" class="space-y-8">
+                <!-- GRID DOS CARDS DE MÉTRICAS -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <!-- Card 1: Total de Receitas -->
+                    <div class="bg-white border border-brand-grayMedium p-5 rounded-2xl shadow-sm">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-xs font-bold text-brand-slateText uppercase tracking-wider">Total de Receitas</span>
+                            <div class="p-2 bg-brand-orange/10 rounded-xl text-brand-orange">
+                                <i data-lucide="utensils" class="w-4 h-4"></i>
+                            </div>
+                        </div>
+                        <h3 class="text-3xl font-black text-brand-black tracking-tight" id="dash-total-receitas">0</h3>
+                        <p class="text-xs text-brand-slateText mt-1">Registadas na sua cozinha</p>
+                    </div>
+
+                    <!-- Card 2: Tempo Médio -->
+                    <div class="bg-white border border-brand-grayMedium p-5 rounded-2xl shadow-sm">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-xs font-bold text-brand-slateText uppercase tracking-wider">Tempo Médio</span>
+                            <div class="p-2 bg-brand-green/10 rounded-xl text-brand-green">
+                                <i data-lucide="clock" class="w-4 h-4"></i>
+                            </div>
+                        </div>
+                        <h3 class="text-3xl font-black text-brand-green tracking-tight" id="dash-tempo-medio">0 min</h3>
+                        <p class="text-xs text-brand-slateText mt-1">Tempo estimado de preparo</p>
+                    </div>
+
+                    <!-- Card 3: Salgados (Cor do Foco: Verde) -->
+                    <div class="bg-white border border-brand-grayMedium p-5 rounded-2xl shadow-sm">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-xs font-bold text-brand-slateText uppercase tracking-wider">Pratos Salgados</span>
+                            <div class="p-2 bg-brand-green/10 rounded-xl text-brand-green">
+                                <i data-lucide="soup" class="w-4 h-4"></i>
+                            </div>
+                        </div>
+                        <h3 class="text-3xl font-black text-brand-green tracking-tight" id="dash-salgados">0</h3>
+                        <p class="text-xs text-brand-slateText mt-1" id="dash-salgados-percent">0% do livro de receitas</p>
+                    </div>
+
+                    <!-- Card 4: Doces (Cor do Foco: Azul) -->
+                    <div class="bg-white border border-brand-grayMedium p-5 rounded-2xl shadow-sm">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-xs font-bold text-brand-slateText uppercase tracking-wider">Sobremesas & Doces</span>
+                            <div class="p-2 bg-brand-blue/10 rounded-xl text-brand-blue">
+                                <i data-lucide="cookie" class="w-4 h-4"></i>
+                            </div>
+                        </div>
+                        <h3 class="text-3xl font-black text-brand-blue tracking-tight" id="dash-doces">0</h3>
+                        <p class="text-xs text-brand-slateText mt-1" id="dash-doces-percent">0% do livro de receitas</p>
+                    </div>
+                </div>
+
+                <!-- SEÇÃO INTERMEDIÁRIA -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Informação de Destaque -->
+                    <div class="lg:col-span-2 bg-white border border-brand-grayMedium p-6 rounded-2xl shadow-sm flex flex-col justify-between">
+                        <div>
+                            <h3 class="text-lg font-black text-brand-black mb-1">Métricas Gastronómicas</h3>
+                            <p class="text-xs text-brand-slateText mb-6">Controle estatístico do paladar, temperatura e tempo das suas criações culinárias.</p>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                <div class="bg-brand-grayLight p-4 rounded-xl border border-brand-grayMedium">
+                                    <div class="flex justify-between text-xs font-bold text-brand-black mb-2">
+                                        <span>Temperatura de Serviço</span>
+                                        <span id="temp-ratio" class="text-brand-orange">Quente (0%)</span>
+                                    </div>
+                                    <div class="w-full bg-brand-grayMedium h-2.5 rounded-full overflow-hidden">
+                                        <div id="temp-progress-bar" class="bg-brand-orange h-full transition-all duration-500" style="width: 0%"></div>
+                                    </div>
+                                </div>
+
+                                <div class="bg-brand-grayLight p-4 rounded-xl border border-brand-grayMedium">
+                                    <div class="flex justify-between text-xs font-bold text-brand-black mb-2">
+                                        <span>Complexidade (>30 min)</span>
+                                        <span id="complexity-ratio" class="text-brand-red font-bold">0% Complexo</span>
+                                    </div>
+                                    <div class="w-full bg-brand-grayMedium h-2.5 rounded-full overflow-hidden">
+                                        <div id="complexity-progress-bar" class="bg-brand-red h-full transition-all duration-500" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-4 mt-8 pt-6 border-t border-brand-grayMedium text-center">
+                            <div>
+                                <p class="text-[10px] uppercase font-bold text-brand-slateText tracking-wider">Pratos Quentes</p>
+                                <p class="text-base font-black mt-1 text-brand-black" id="summary-quentes">0</p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] uppercase font-bold text-brand-slateText tracking-wider">Pratos Frios</p>
+                                <p class="text-base font-black mt-1 text-brand-black" id="summary-frios">0</p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] uppercase font-bold text-brand-slateText tracking-wider">Análise de Sabor</p>
+                                <p class="text-sm font-bold mt-1 text-brand-green flex items-center justify-center gap-1">
+                                    <span class="w-2 h-2 rounded-full bg-brand-green"></span> Ativo
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Métricas Rápidas por Categoria Culinária -->
+                    <div class="bg-white border border-brand-grayMedium p-6 rounded-2xl shadow-sm">
+                        <h3 class="text-base font-black text-brand-black mb-4">Categorias Culinárias</h3>
+                        <div class="space-y-4" id="categories-distribution-list">
+                            <!-- Injetado dinamicamente via JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CARDS VISUAIS DE RECEITAS RECENTES -->
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="text-base font-black text-brand-black">Criações Recentes</h3>
+                            <p class="text-xs text-brand-slateText">As últimas receitas catalogadas.</p>
+                        </div>
+                        <button onclick="switchTab('receitas')" class="text-xs text-brand-orange font-bold hover:underline flex items-center gap-1">
+                            Ver Todas
+                            <i data-lucide="chevron-right" class="w-3 h-3"></i>
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="recent-recipes-container">
+                        <!-- Injetado dinamicamente via JS -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- ================= VIEW 2: RECEITAS COMPLETA ================= -->
+            <section id="view-receitas" class="hidden space-y-6">
+                <!-- Cabeçalho da Seção -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-xl font-black text-brand-black">Catálogo de Receitas</h2>
+                        <p class="text-xs text-brand-slateText">Gerencie, filtre e visualize as suas criações culinárias.</p>
+                    </div>
+                    <!-- Filtros Rápidos -->
+                    <div class="flex flex-wrap items-center gap-2">
+                        <select id="filter-paladar" onchange="loadRecipes()" class="bg-white border border-brand-grayMedium text-xs text-brand-black rounded-lg px-3 py-2 focus:ring-1 focus:ring-brand-orange focus:outline-none shadow-sm">
+                            <option value="ALL">Todos os Sabores</option>
+                            <option value="SALGADO">Salgados</option>
+                            <option value="DOCE">Doces</option>
+                        </select>
+                        <select id="filter-temp" onchange="loadRecipes()" class="bg-white border border-brand-grayMedium text-xs text-brand-black rounded-lg px-3 py-2 focus:ring-1 focus:ring-brand-orange focus:outline-none shadow-sm">
+                            <option value="ALL">Todas as Temperaturas</option>
+                            <option value="QUENTE">Quente</option>
+                            <option value="FRIA">Fria</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Tabela de Controle -->
+                <div class="bg-white border border-brand-grayMedium rounded-2xl overflow-hidden shadow-sm">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-brand-grayLight border-b border-brand-grayMedium text-[11px] text-brand-slateText uppercase tracking-wider">
+                                    <th class="p-4 font-bold">Título</th>
+                                    <th class="p-4 font-bold">Categoria</th>
+                                    <th class="p-4 font-bold">Tempo de Preparo</th>
+                                    <th class="p-4 font-bold">Paladar</th>
+                                    <th class="p-4 font-bold">Temperatura</th>
+                                    <th class="p-4 font-bold text-center">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="full-recipes-tbody" class="divide-y divide-brand-grayMedium text-xs text-brand-black">
+                                <!-- Injetado dinamicamente via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ================= VIEW 3: CONFIGURAÇÃO DE CONEXÃO ================= -->
+            <section id="view-config" class="hidden space-y-6 max-w-xl">
+                <div>
+                    <h2 class="text-xl font-black text-brand-black">Configuração da API SmartRecipes</h2>
+                    <p class="text-xs text-brand-slateText">Configure a integração com o seu microsserviço C# executado localmente.</p>
+                </div>
+
+                <div class="bg-white border border-brand-grayMedium p-6 rounded-2xl space-y-4 shadow-sm">
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-brand-slateText mb-1.5">Endereço Base da API Local</label>
+                        <input type="text" id="config-api-url" value="http://localhost:5244" class="w-full bg-brand-grayLight border border-brand-grayMedium rounded-xl px-4 py-2.5 text-xs text-brand-black focus:ring-1 focus:ring-brand-orange focus:outline-none">
+                        <p class="text-[10px] text-brand-slateText mt-1.5">Configure para a porta do seu projeto SmartRecipes no Visual Studio.</p>
+                    </div>
+
+                    <div class="pt-4 border-t border-brand-grayMedium flex justify-end gap-3">
+                        <button onclick="testApiConnection()" class="bg-brand-grayLight border border-brand-grayMedium hover:bg-brand-grayMedium text-brand-black px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200">
+                            Testar Conexão
+                        </button>
+                        <button onclick="saveConfig()" class="bg-brand-orange hover:bg-brand-orangeDark text-white px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 shadow-md">
+                            Salvar Configurações
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- ================= MODAL: CADASTRAR / EDITAR RECEITA ================= -->
+    <div id="modal-receita" class="fixed inset-0 bg-brand-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white border border-brand-grayMedium rounded-2xl w-full max-w-lg p-6 space-y-5 shadow-2xl">
+            <div class="flex justify-between items-center">
+                <h3 class="text-base font-black text-brand-black" id="modal-title">Nova Receita</h3>
+                <button onclick="closeModalReceita()" class="text-brand-slateText hover:text-brand-black transition-colors">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <form id="form-receita" onsubmit="saveReceita(event)" class="space-y-4">
+                <input type="hidden" id="form-receita-id">
+
+                <div>
+                    <label class="block text-[10px] font-bold uppercase text-brand-slateText mb-1">Título da Receita</label>
+                    <input type="text" id="form-titulo" required placeholder="Ex: Lasanha de Carne, Bolo de Chocolate" class="w-full bg-brand-grayLight border border-brand-grayMedium rounded-xl px-4 py-2.5 text-xs text-brand-black focus:ring-1 focus:ring-brand-orange focus:outline-none">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase text-brand-slateText mb-1">Tempo de Preparo (minutos)</label>
+                        <input type="number" id="form-tempo" required placeholder="30" class="w-full bg-brand-grayLight border border-brand-grayMedium rounded-xl px-4 py-2.5 text-xs text-brand-black focus:ring-1 focus:ring-brand-orange focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase text-brand-slateText mb-1">Categoria Culinária</label>
+                        <select id="form-categoria" class="w-full bg-brand-grayLight border border-brand-grayMedium rounded-xl px-4 py-2.5 text-xs text-brand-black focus:ring-1 focus:ring-brand-orange focus:outline-none">
+                            <!-- Categorias injetadas -->
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase text-brand-slateText mb-1">Paladar</label>
+                        <select id="form-paladar" class="w-full bg-brand-grayLight border border-brand-grayMedium rounded-xl px-4 py-2.5 text-xs text-brand-black focus:ring-1 focus:ring-brand-orange focus:outline-none">
+                            <option value="SALGADO">Salgado</option>
+                            <option value="DOCE">Doce</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase text-brand-slateText mb-1">Temperatura de Serviço</label>
+                        <select id="form-temperatura" class="w-full bg-brand-grayLight border border-brand-grayMedium rounded-xl px-4 py-2.5 text-xs text-brand-black focus:ring-1 focus:ring-brand-orange focus:outline-none">
+                            <option value="QUENTE">Quente</option>
+                            <option value="FRIA">Fria</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-bold uppercase text-brand-slateText mb-1">Ingredientes</label>
+                    <textarea id="form-ingredientes" required rows="2" placeholder="Digite os ingredientes separados por vírgula..." class="w-full bg-brand-grayLight border border-brand-grayMedium rounded-xl px-4 py-2.5 text-xs text-brand-black focus:ring-1 focus:ring-brand-orange focus:outline-none resize-none"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-bold uppercase text-brand-slateText mb-1">Modo de Preparo</label>
+                    <textarea id="form-preparo" required rows="3" placeholder="Passo 1: Misturar... Passo 2: Assar..." class="w-full bg-brand-grayLight border border-brand-grayMedium rounded-xl px-4 py-2.5 text-xs text-brand-black focus:ring-1 focus:ring-brand-orange focus:outline-none resize-none"></textarea>
+                </div>
+
+                <div class="pt-4 border-t border-brand-grayMedium flex justify-end gap-3">
+                    <button type="button" onclick="closeModalReceita()" class="bg-brand-grayLight border border-brand-grayMedium text-brand-black px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-200">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="bg-brand-orange hover:bg-brand-orangeDark text-white px-5 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 shadow-md">
+                        Salvar Receita
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= SISTEMA DE TOASTS ================= -->
+    <div id="toast" class="fixed bottom-4 right-4 bg-white border border-brand-grayMedium rounded-2xl p-4 shadow-2xl flex items-center gap-3 transition-transform duration-300 transform translate-y-24 z-50">
+        <div class="p-1.5 rounded-xl text-brand-orange bg-brand-orange/10" id="toast-icon-container">
+            <i data-lucide="check" class="w-5 h-5"></i>
+        </div>
+        <div>
+            <p class="text-xs font-bold text-brand-black" id="toast-title">Sucesso!</p>
+            <p class="text-[10px] text-brand-slateText" id="toast-desc">Modificações salvas.</p>
+        </div>
+    </div>
+
+    <!-- ================= JAVASCRIPT DO SMARTRECIPES ================= -->
+    <script>
+        let state = {
+            apiMode: false,
+            apiUrl: 'http://localhost:5244',
+            utilizadores: [
+                { id: 1, nome: "Chef Universitário", email: "chef@ipt.pt" }
+            ],
+            categorias: [
+                { id: 1, nome: "Massas" },
+                { id: 2, nome: "Sobremesas" },
+                { id: 3, nome: "Bebidas" },
+                { id: 4, nome: "Carnes" },
+                { id: 5, nome: "Sopas" }
+            ],
+            receitas: [
+                { id: 1, titulo: "Esparguete à Carbonara", ingredientes: "200g esparguete, 150g bacon, 2 ovos, 50g queijo pecorino, sal, pimenta preta", modoPreparo: "Coza a massa. Frite o bacon até dourar. Misture ovos e queijo numa taça. Junte a massa quente ao bacon e, fora do lume, adicione a mistura de ovos.", tempoPreparoMinutos: 25, paladar: "SALGADO", temperatura: "QUENTE", utilizadorId: 1, categoriaId: 1 },
+                { id: 2, titulo: "Mousse de Chocolate Suprema", ingredientes: "200g chocolate preto, 4 ovos, 50g açúcar, 1 colher de manteiga", modoPreparo: "Derreta o chocolate com a manteiga. Separe as gemas das claras. Bata as gemas com açúcar e adicione ao chocolate. Bata as claras em castelo e envolva delicadamente.", tempoPreparoMinutos: 15, paladar: "DOCE", temperatura: "FRIA", utilizadorId: 1, categoriaId: 2 },
+                { id: 3, titulo: "Sopa de Legumes Tradicional", ingredientes: "2 batatas, 1 cenoura, 1/2 alho francês, 100g abóbora, azeite", modoPreparo: "Descasque e corte os legumes. Coza em água temperada com sal por 20 minutos. Triture tudo com a varinha mágica e adicione um fio de azeite.", tempoPreparoMinutos: 35, paladar: "SALGADO", temperatura: "QUENTE", utilizadorId: 1, categoriaId: 5 }
+            ]
+        };
+
+        window.onload = function() {
+            lucide.createIcons();
+            const savedUrl = localStorage.getItem('smartrecipes_api_url');
+            if(savedUrl) {
+                state.apiUrl = savedUrl;
+                document.getElementById('config-api-url').value = savedUrl;
+            }
+            renderAll();
+        }
+
+        function switchTab(tabId) {
+            document.getElementById('view-dashboard').classList.add('hidden');
+            document.getElementById('view-receitas').classList.add('hidden');
+            document.getElementById('view-config').classList.add('hidden');
+
+            const tabs = ['dashboard', 'receitas', 'config'];
+            tabs.forEach(t => {
+                const navLink = document.getElementById(`nav-${t}`);
+                navLink.className = "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-brand-slateText hover:text-brand-black hover:bg-brand-grayMedium transition-all duration-200";
+            });
+
+            document.getElementById(`view-${tabId}`).classList.remove('hidden');
+            const activeLink = document.getElementById(`nav-${tabId}`);
+            activeLink.className = "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold bg-brand-orange text-white shadow-md shadow-brand-orange/10";
+        }
+
+        async function toggleApiMode() {
+            if (!state.apiMode) {
+                const connected = await verifyApiConnectivity();
+                if (connected) {
+                    state.apiMode = true;
+                    showToast("API Ativa!", "Ligado ao servidor C# com SQLite.", "check", "emerald");
+                    await syncWithDatabase();
+                } else {
+                    showToast("Falha na API!", "Não foi possível conectar ao servidor local.", "alert-triangle", "rose");
+                }
+            } else {
+                state.apiMode = false;
+                showToast("Modo Demonstrativo", "Exibindo dados locais simulados.", "info", "brand-orange");
+            }
+            renderAll();
+        }
+
+        function showToast(title, desc, iconName, colorName) {
+            const toast = document.getElementById('toast');
+            const tTitle = document.getElementById('toast-title');
+            const tDesc = document.getElementById('toast-desc');
+            const iconContainer = document.getElementById('toast-icon-container');
+
+            tTitle.innerText = title;
+            tDesc.innerText = desc;
+
+            iconContainer.className = `p-1.5 rounded-xl text-white bg-brand-orange shadow-sm`;
+            iconContainer.innerHTML = `<i data-lucide="${iconName}" class="w-5 h-5"></i>`;
+            lucide.createIcons();
+
+            toast.classList.remove('translate-y-24');
+            toast.classList.add('translate-y-0');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0');
+                toast.classList.add('translate-y-24');
+            }, 3000);
+        }
+
+        async function verifyApiConnectivity() {
+            try {
+                const response = await fetch(`${state.apiUrl}/api/receitas`, { method: 'GET' });
+                return response.status === 200;
+            } catch (e) {
+                return false;
+            }
+        }
+
+        async function syncWithDatabase() {
+            if(!state.apiMode) return;
+            try {
+                const resUsers = await fetch(`${state.apiUrl}/api/utilizadores`);
+                if(resUsers.ok) state.utilizadores = await resUsers.json();
+
+                const resReceitas = await fetch(`${state.apiUrl}/api/receitas`);
+                if(resReceitas.ok) {
+                    const dbReceitas = await resReceitas.json();
+                    state.receitas = dbReceitas.map(r => ({
+                        id: r.id,
+                        titulo: r.titulo,
+                        ingredientes: r.ingredientes,
+                        modoPreparo: r.modoPreparo,
+                        tempoPreparoMinutos: r.tempoPreparoMinutos,
+                        paladar: r.paladar,
+                        temperatura: r.temperatura,
+                        utilizadorId: state.utilizadores[0]?.id || 1,
+                        categoriaId: state.categorias.find(c => c.nome === r.categoria)?.id || 1
+                    }));
+                }
+            } catch (err) {
+                console.error("Falha ao sincronizar com banco:", err);
+            }
+        }
+
+        function renderAll() {
+            const statusDot = document.getElementById('status-dot');
+            const statusText = document.getElementById('status-text');
+            const btnToggle = document.getElementById('btn-toggle-api');
+
+            if (state.apiMode) {
+                statusDot.className = "w-2 h-2 rounded-full bg-brand-green animate-pulse";
+                statusText.innerText = "API C# Ativa";
+                statusText.className = "text-xs font-bold text-brand-green";
+                btnToggle.innerText = "Desconectar";
+            } else {
+                statusDot.className = "w-2 h-2 rounded-full bg-brand-orange animate-pulse";
+                statusText.innerText = "Modo Demo";
+                statusText.className = "text-xs font-bold text-brand-orange";
+                btnToggle.innerText = "Conectar API C#";
+            }
+
+            const user = state.utilizadores[0] || { nome: "Chef", email: "chef@ipt.pt" };
+            document.getElementById('current-user-name').innerText = user.nome;
+            document.getElementById('current-user-email').innerText = user.email;
+
+            // Renderiza métricas
+            const total = state.receitas.length;
+            const tempos = state.receitas.map(r => r.tempoPreparoMinutos);
+            const tempoMedio = total > 0 ? Math.round(tempos.reduce((a, b) => a + b, 0) / total) : 0;
+
+            const salgadosCount = state.receitas.filter(r => r.paladar === 'SALGADO').length;
+            const docesCount = state.receitas.filter(r => r.paladar === 'DOCE').length;
+
+            document.getElementById('dash-total-receitas').innerText = total;
+            document.getElementById('dash-tempo-medio').innerText = `${tempoMedio} min`;
+            document.getElementById('dash-salgados').innerText = salgadosCount;
+            document.getElementById('dash-doces').innerText = docesCount;
+
+            const salgadoPercent = total > 0 ? Math.round((salgadosCount / total) * 100) : 0;
+            const docePercent = total > 0 ? Math.round((docesCount / total) * 100) : 0;
+
+            document.getElementById('dash-salgados-percent').innerText = `${salgadoPercent}% do catálogo`;
+            document.getElementById('dash-doces-percent').innerText = `${docePercent}% do catálogo`;
+
+            // Temperaturas
+            const quentesCount = state.receitas.filter(r => r.temperatura === 'QUENTE').length;
+            const friasCount = state.receitas.filter(r => r.temperatura === 'FRIA').length;
+            const quentePercent = total > 0 ? Math.round((quentesCount / total) * 100) : 0;
+
+            document.getElementById('temp-ratio').innerText = `Quente (${quentePercent}%)`;
+            document.getElementById('temp-progress-bar').style.width = `${quentePercent}%`;
+
+            // Complexidade (tempo > 30min)
+            const complexCount = state.receitas.filter(r => r.tempoPreparoMinutos > 30).length;
+            const complexPercent = total > 0 ? Math.round((complexCount / total) * 100) : 0;
+            document.getElementById('complexity-ratio').innerText = `${complexPercent}% Complexo (>30min)`;
+            document.getElementById('complexity-progress-bar').style.width = `${complexPercent}%`;
+
+            document.getElementById('summary-quentes').innerText = quentesCount;
+            document.getElementById('summary-frios').innerText = friasCount;
+
+            renderCategoriesDistribution();
+            loadRecipes();
+        }
+
+        function renderCategoriesDistribution() {
+            const list = document.getElementById('categories-distribution-list');
+            list.innerHTML = '';
+            const total = state.receitas.length;
+
+            state.categorias.forEach(cat => {
+                const count = state.receitas.filter(r => r.categoriaId === cat.id).length;
+                const percent = total > 0 ? Math.round((count / total) * 100) : 0;
+
+                list.innerHTML += `
+                    <div>
+                        <div class="flex justify-between items-center text-xs font-semibold mb-1">
+                            <span class="text-brand-black">${cat.nome}</span>
+                            <span class="text-brand-slateText">${count} pratos <span class="text-[10px]">(${percent}%)</span></span>
+                        </div>
+                        <div class="w-full bg-brand-grayMedium h-1.5 rounded-full overflow-hidden">
+                            <div class="h-full bg-brand-orange rounded-full transition-all duration-300" style="width: ${percent}%"></div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function loadRecipes() {
+            const filterPaladar = document.getElementById('filter-paladar').value;
+            const filterTemp = document.getElementById('filter-temp').value;
+
+            let filtered = [...state.receitas];
+            if (filterPaladar !== 'ALL') {
+                filtered = filtered.filter(r => r.paladar === filterPaladar);
+            }
+            if (filterTemp !== 'ALL') {
+                filtered = filtered.filter(r => r.temperatura === filterTemp);
+            }
+
+            // Renderiza tabela completa
+            const tbody = document.getElementById('full-recipes-tbody');
+            tbody.innerHTML = '';
+
+            if(filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-brand-slateText">Nenhuma receita correspondente aos filtros.</td></tr>`;
+            } else {
+                filtered.forEach(r => {
+                    const cat = state.categorias.find(c => c.id === r.categoriaId) || { nome: "Geral" };
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-brand-grayLight/50 transition-colors">
+                            <td class="p-4 font-bold text-brand-black">${r.titulo}</td>
+                            <td class="p-4 text-brand-slateText">${cat.nome}</td>
+                            <td class="p-4 text-brand-black font-semibold">${r.tempoPreparoMinutos} min</td>
+                            <td class="p-4">
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold ${r.paladar === 'SALGADO' ? 'bg-brand-green/10 text-brand-green' : 'bg-brand-blue/10 text-brand-blue'}">
+                                    ${r.paladar}
+                                </span>
+                            </td>
+                            <td class="p-4 text-brand-slateText">${r.temperatura}</td>
+                            <td class="p-4 text-center">
+                                <div class="flex items-center justify-center gap-2">
+                                    <button onclick="editRecipe(${r.id})" class="p-1.5 hover:bg-brand-grayLight rounded-lg text-brand-slateText hover:text-brand-orange transition-all">
+                                        <i data-lucide="edit-3" class="w-4 h-4"></i>
+                                    </button>
+                                    <button onclick="deleteRecipe(${r.id})" class="p-1.5 hover:bg-brand-grayLight rounded-lg text-brand-slateText hover:text-brand-red transition-all">
+                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+
+            // Renderiza os cards na Dashboard (recém-adicionados)
+            const container = document.getElementById('recent-recipes-container');
+            container.innerHTML = '';
+            const recents = [...state.receitas].slice(-2).reverse();
+
+            if (recents.length === 0) {
+                container.innerHTML = `<p class="text-xs text-brand-slateText">Sem receitas recentes.</p>`;
+            } else {
+                recents.forEach(r => {
+                    const cat = state.categorias.find(c => c.id === r.categoriaId) || { nome: "Geral" };
+                    container.innerHTML += `
+                        <div class="bg-white border border-brand-grayMedium p-5 rounded-2xl space-y-3 shadow-sm">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <h4 class="font-bold text-sm text-brand-black">${r.titulo}</h4>
+                                    <p class="text-[10px] text-brand-orange font-bold uppercase tracking-wider">${cat.nome}</p>
+                                </div>
+                                <span class="text-xs text-brand-slateText flex items-center gap-1 font-semibold">
+                                    <i data-lucide="clock" class="w-3.5 h-3.5 text-brand-green"></i>
+                                    ${r.tempoPreparoMinutos} min
+                                </span>
+                            </div>
+                            <div class="space-y-1">
+                                <p class="text-[10px] font-bold text-brand-slateText uppercase tracking-wider">Ingredientes</p>
+                                <p class="text-xs text-brand-black line-clamp-2">${r.ingredientes}</p>
+                            </div>
+                            <div class="pt-3 border-t border-brand-grayMedium flex justify-between items-center text-[11px] text-brand-slateText">
+                                <span>Sabor: <strong class="text-brand-black">${r.paladar}</strong></span>
+                                <span>Servido: <strong class="text-brand-black">${r.temperatura}</strong></span>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            lucide.createIcons();
+        }
+
+        function openModalReceita(editId = null) {
+            const modal = document.getElementById('modal-receita');
+            const title = document.getElementById('modal-title');
+
+            const catSelect = document.getElementById('form-categoria');
+            catSelect.innerHTML = state.categorias.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+
+            if (editId) {
+                title.innerText = "Editar Receita";
+                const r = state.receitas.find(item => item.id === editId);
+                if (r) {
+                    document.getElementById('form-receita-id').value = r.id;
+                    document.getElementById('form-titulo').value = r.titulo;
+                    document.getElementById('form-tempo').value = r.tempoPreparoMinutos;
+                    document.getElementById('form-paladar').value = r.paladar;
+                    document.getElementById('form-temperatura').value = r.temperatura;
+                    document.getElementById('form-ingredientes').value = r.ingredientes;
+                    document.getElementById('form-preparo').value = r.modoPreparo;
+                    catSelect.value = r.categoriaId;
+                }
+            } else {
+                title.innerText = "Nova Receita";
+                document.getElementById('form-receita-id').value = "";
+                document.getElementById('form-receita').reset();
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeModalReceita() {
+            document.getElementById('modal-receita').classList.add('hidden');
+        }
+
+        async function saveReceita(event) {
+            event.preventDefault();
+
+            const id = document.getElementById('form-receita-id').value;
+            const dto = {
+                titulo: document.getElementById('form-titulo').value,
+                ingredientes: document.getElementById('form-ingredientes').value,
+                modoPreparo: document.getElementById('form-preparo').value,
+                tempoPreparoMinutos: parseInt(document.getElementById('form-tempo').value),
+                paladar: document.getElementById('form-paladar').value,
+                temperatura: document.getElementById('form-temperatura').value,
+                utilizadorId: state.utilizadores[0]?.id || 1,
+                categoriaId: parseInt(document.getElementById('form-categoria').value)
+            };
+
+            if (state.apiMode) {
+                try {
+                    let response;
+                    if (id) {
+                        response = await fetch(`${state.apiUrl}/api/receitas/${id}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(dto)
+                        });
+                        if (response.status === 204) {
+                            showToast("Alteração Concluída!", "Receita editada no servidor.", "check", "amber");
+                        }
+                    } else {
+                        response = await fetch(`${state.apiUrl}/api/receitas`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(dto)
+                        });
+                        if (response.status === 201) {
+                            showToast("Criado!", "Nova receita adicionada ao banco SQLite.", "check", "amber");
+                        }
+                    }
+                    await syncWithDatabase();
+                } catch (e) {
+                    showToast("Erro de Rede", "Não foi possível sincronizar com o banco.", "alert-triangle", "rose");
+                }
+            } else {
+                if (id) {
+                    const idx = state.receitas.findIndex(r => r.id === parseInt(id));
+                    if (idx !== -1) {
+                        state.receitas[idx] = { id: parseInt(id), ...dto };
+                        showToast("Alterado!", "Receita alterada localmente.", "check", "amber");
+                    }
+                } else {
+                    const newId = state.receitas.length > 0 ? Math.max(...state.receitas.map(r => r.id)) + 1 : 1;
+                    state.receitas.push({ id: newId, ...dto });
+                    showToast("Criado!", "Receita adicionada localmente.", "check", "amber");
+                }
+            }
+
+            closeModalReceita();
+            renderAll();
+        }
+
+        async function deleteRecipe(id) {
+            const confirmacao = confirm("Deseja realmente excluir permanentemente esta receita?");
+            if (!confirmacao) return;
+
+            if (state.apiMode) {
+                try {
+                    const response = await fetch(`${state.apiUrl}/api/receitas/${id}`, { method: 'DELETE' });
+                    if (response.status === 204) {
+                        showToast("Excluído!", "Receita removida da base SQLite.", "trash-2", "emerald");
+                        await syncWithDatabase();
+                    }
+                } catch (e) {
+                    showToast("Erro ao Excluir", "Não foi possível deletar via API.", "alert-triangle", "rose");
+                }
+            } else {
+                state.receitas = state.receitas.filter(r => r.id !== id);
+                showToast("Excluído!", "Registro apagado da memória local.", "trash-2", "amber");
+            }
+            renderAll();
+        }
+
+        function editRecipe(id) {
+            openModalReceita(id);
+        }
+
+        function saveConfig() {
+            const rawUrl = document.getElementById('config-api-url').value.trim();
+            const cleanUrl = rawUrl.endsWith('/') ? rawUrl.slice(0, -1) : rawUrl;
+
+            state.apiUrl = cleanUrl;
+            localStorage.setItem('smartrecipes_api_url', cleanUrl);
+            showToast("Configuração Salva", `API configurada para: ${cleanUrl}`, "settings", "amber");
+
+            if(state.apiMode) {
+                syncWithDatabase().then(() => renderAll());
+            }
+        }
+
+        async function testApiConnection() {
+            const url = document.getElementById('config-api-url').value.trim();
+            const cleanUrl = url.endsWith('/') ? url.slice(0, -1) : url;
+
+            try {
+                const response = await fetch(`${cleanUrl}/api/receitas`, { method: 'GET' });
+                if (response.status === 200) {
+                    alert(`Sucesso! Conexão estabelecida com sucesso no endereço: ${cleanUrl}`);
+                } else {
+                    alert(`Conexão respondida com erro HTTP ${response.status}. Verifique se o Swagger está ativo.`);
+                }
+            } catch (e) {
+                alert(`Conexão recusada em: ${cleanUrl}. Certifique-se de que o seu projeto SmartRecipes está em execução.`);
+            }
+        }
+    </script>
+</body>
+</html>
