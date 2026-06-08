@@ -1,0 +1,12 @@
+﻿## Ignore Visual Studio temporary files, build results, and SQLite local databases
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Bb]in/
+[Ob]j/
+.vs/
+*.user
+*.db
+*.db-shm
+*.db-wal
